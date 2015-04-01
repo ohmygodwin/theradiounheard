@@ -1,0 +1,98 @@
+<html>
+
+<head>
+<title>WNYU SoundTour</title>
+</head>
+
+<body>
+  <img src="./wnyu_floorplan.png" alt="WNYU floorplan" id="floorplan" />
+
+<script type="text/javascript" src="http://cdn.tonejs.org/latest/Tone.min.js"></script>
+<script type="text/javascript">
+
+var rooms = [
+  { sample: './lobby1.mp3', posX: 68, posY: 168 },
+  { sample: './lobby2.mp3', posX: 331, posY: 168 },
+  { sample: './lobby3.mp3', posX: 629, posY: 168 },
+  { sample: './door.mp3', posX: 333, posY: 307 },
+  { sample: './closet.mp3', posX: 103, posY: 307 },
+  { sample: './stacks.mp3', posX: 497, posY: 307 },
+  { sample: './prodstudio.mp3', posX: 68, posY: 61 },
+  { sample: './livestudio.mp3', posX: 238, posY: 61 },
+  { sample: './airstudio.mp3', posX: 413, posY: 61 },
+  { sample: './office.mp3', posX: 579, posY: 61 }
+];
+
+var maxVolume = 0;
+var minVolume = 0;
+
+var maxPan = 0;
+var minPan = 0;
+
+var players = rooms.map(function makePlayer(room) {
+
+  var player = new Tone.Player(room.sample, function () {
+      player.start();
+  });
+
+  var panvol = new Tone.PanVol(0.5, 0);
+
+
+  player.connect(panvol);
+  panvol.toMaster();
+
+  return {
+    player: player,
+    posX: room.posX,
+    posY: room.posY,
+    panvol: panvol,
+
+    pv_update: function (mouseX, mouseY) {
+      var distance = Math.sqrt( Math.pow(mouseX - this.posX, 2) + Math.pow(mouseY - this.posY, 2));
+      //var distX = Math.abs(mouseX - posX);
+
+      // console.log('distance: ' + distance);
+
+      var volume = map_range(distance, 0, 170, 0, -20);
+
+      //var volume = Math.min(1, 1 / distance);
+      var balance = 1 - ((1 + ((this.posX - mouseX) / 100)) / 2);
+
+      // console.log('volume: ' + volume);
+      // console.log('balance: ' + balance);
+      // maxVolume = Math.max(volume, maxVolume);
+      // minVolume = Math.min(volume, minVolume);
+      // maxPan = Math.max(balance, maxPan);
+      // minPan = Math.min(balance, minPan);
+
+      // console.log('maxVolume: ' + maxVolume);
+      // console.log('minVolume: ' + minVolume);
+      // console.log('maxPan: ' + maxPan);
+      // console.log('minPan: ' + minPan);
+
+      this.panvol.volume.value = volume;
+      this.panvol.pan.value = Math.max(0, Math.min(1, balance));
+    }
+  }
+
+});
+
+var floorplan = document.getElementById('floorplan');
+
+floorplan.onmousemove = function(e){
+  var mouseX = e.clientX;
+  var mouseY = e.clientY;
+
+  players.forEach(function (player) {
+    player.pv_update(mouseX, mouseY);
+  });
+};
+
+function map_range(value, low1, high1, low2, high2) {
+    return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
+}
+
+</script>
+</body>
+
+</html>
